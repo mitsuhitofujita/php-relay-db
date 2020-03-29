@@ -1,0 +1,23 @@
+{
+    "name": "mitsuhitofujita/php-db-tsv",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mitsuhito Fujita",
+            "email": "mitsuhitofujita@gmail.com"
+        }
+    ],
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "RelayDb\\": "src/RelayDb"
+        }
+    },
+    "scripts": {
+        "phpcs": [
+            "phpcs src"
+        ]
+    }
+}
