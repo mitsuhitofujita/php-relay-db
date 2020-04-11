@@ -38,12 +38,17 @@ class RelayPg
     public function relay(array $settings): void
     {
         $source = $settings['source'];
-        $srcPdo = $this->pdoHelper->makePdo($source['dsn'], $source['username'], $source['password'], $source['options']);
+        $srcPdo = $this->pdoHelper->makePdo(
+            $source['dsn'],
+            $source['username'],
+            $source['password'],
+            $source['options']
+        );
 
         $relay = $settings['relay'];
         $pdo = $this->pdoHelper->makePdo($relay['dsn'], $relay['username'], $relay['password'], $relay['options']);
 
-        $this->pdoHelper->transaction($pdo, function($pdo) use ($srcPdo, $settings) {
+        $this->pdoHelper->transaction($pdo, function ($pdo) use ($srcPdo, $settings) {
             $this->relayTables($pdo, $srcPdo, $settings);
             $this->relayRelations($pdo, $srcPdo, $settings);
         });
@@ -80,13 +85,18 @@ class RelayPg
      * @param string $srcQuery
      * @param int $limit
      */
-    public function relayTable(PDO $pdo, string $table, array $primaryColumns, PDO $srcPdo, string $srcQuery, int $limit): void
-    {
+    public function relayTable(
+        PDO $pdo,
+        string $table,
+        array $primaryColumns,
+        PDO $srcPdo,
+        string $srcQuery,
+        int $limit
+    ): void {
         (new ChunkFetcher($srcPdo, $limit))->bulkRows(
             $srcQuery,
             [],
             function ($srcStmt, $i) use ($pdo, $table, $primaryColumns) {
-                echo var_export($table, true) . PHP_EOL;
                 if ($i === 0) {
                     $this->createRelayTable($pdo, $table, $primaryColumns, $srcStmt);
                 }
@@ -102,7 +112,7 @@ class RelayPg
      * @param PDOStatement $srcStmt
      * @throws RelayDbException
      */
-    public function createRelayTable(PDO $pdo, string $table, array $primaryColumns, PDOStatement $srcStmt)
+    public function createRelayTable(PDO $pdo, string $table, array $primaryColumns, PDOStatement $srcStmt): void
     {
         $columnMetas = $this->pdoHelper->getColumnMetas($srcStmt);
         $columns = $this->pgHelper->makeColumnDeclarationsFromColumnMetas($columnMetas);
@@ -148,6 +158,11 @@ class RelayPg
         }
     }
 
+    /**
+     * @param PDO $pdo
+     * @param PDO $srcPdo
+     * @param array $relationSetting
+     */
     public function relayRelation(PDO $pdo, PDO $srcPdo, array $relationSetting): void
     {
         (new ChunkFetcher($pdo, $relationSetting['relay_limit']))->bulkRows(
@@ -159,7 +174,11 @@ class RelayPg
                     return false;
                 }
 
-                $srcQuery = str_replace('{{relay_query_result}}', $resultPartialQuery, $relationSetting['source_query']);
+                $srcQuery = str_replace(
+                    '{{relay_query_result}}',
+                    $resultPartialQuery,
+                    $relationSetting['source_query']
+                );
                 $this->relayTable(
                     $pdo,
                     $relationSetting['table'],

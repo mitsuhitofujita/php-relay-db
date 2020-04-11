@@ -6,6 +6,9 @@ use RelayDb\StorePg;
 
 class Store
 {
+    /**
+     * @throws Exception
+     */
     public function main(): void
     {
         $settings = [
@@ -46,6 +49,3 @@ try {
 } catch (Exception $e) {
     echo $e->getMessage();
 }
-
-
-
