@@ -4,6 +4,7 @@ namespace RelayDb;
 use RelayDb\Helpers\PdoHelper;
 use RelayDb\Helpers\PostgreSqlHelper;
 use PDO;
+use Exception;
 
 class StorePg
 {
@@ -18,9 +19,9 @@ class StorePg
     public $pgHelper;
 
     /**
-     * StoreDb constructor.
+     * StorePg constructor.
      * @param PdoHelper|null $pdoHelper
-     * @param PostgreSqlHelper|null $sqliteHelper
+     * @param PostgreSqlHelper|null $pgHelper
      */
     public function __construct(PdoHelper $pdoHelper = null, PostgreSqlHelper $pgHelper = null)
     {
@@ -30,7 +31,7 @@ class StorePg
 
     /**
      * @param array $settings
-     * @throws \Exception
+     * @throws Exception
      */
     public function store(array $settings): void
     {
@@ -40,12 +41,18 @@ class StorePg
         $relay = $settings['relay'];
         $pdo = $this->pdoHelper->makePdo($relay['dsn'], $relay['username'], $relay['password'], $relay['options']);
 
-        $this->pdoHelper->transaction($pdo, function($pdo) use ($dstPdo, $settings) {
+        $this->pdoHelper->transaction($pdo, function ($pdo) use ($dstPdo, $settings) {
             $this->storeTables($pdo, $dstPdo, $settings);
         });
     }
 
-    public function storeTables(PDO $pdo, PDO $dstPdo, array $settings) {
+    /**
+     * @param PDO $pdo
+     * @param PDO $dstPdo
+     * @param array $settings
+     */
+    public function storeTables(PDO $pdo, PDO $dstPdo, array $settings): void
+    {
         $defaultTableSetting = [
             'relay_limit' => 1000,
         ];
@@ -62,8 +69,22 @@ class StorePg
         }
     }
 
-    public function storeTable(PDO $pdo, string $table, array $primaryColumns, string $query, int $limit, PDO $dstPdo): void
-    {
+    /**
+     * @param PDO $pdo
+     * @param string $table
+     * @param array $primaryColumns
+     * @param string $query
+     * @param int $limit
+     * @param PDO $dstPdo
+     */
+    public function storeTable(
+        PDO $pdo,
+        string $table,
+        array $primaryColumns,
+        string $query,
+        int $limit,
+        PDO $dstPdo
+    ): void {
         (new ChunkFetcher($pdo, $limit))->bulkRows(
             $query,
             [],
